@@ -1,10 +1,12 @@
 package backEnd;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.io.FileReader;
 import java.io.BufferedReader;
-
 
 public class Pocket {
     /**
@@ -17,18 +19,21 @@ public class Pocket {
      * 
      * A Pocket object interfaces with the pocket RandomAccessFile.
      */
-    public Pocket () throws Exception {
+    public Pocket() throws Exception {
         this.file = new RandomAccessFile(new File("backEnd/pocket.txt"), "rw");
     }
 
     /**
-     * Adds a product to the pocket. 
+     * Adds a product to the pocket.
      *
-     * @param  product           product name to add to the pocket (e.g. "car")
+     * @param product product name to add to the pocket (e.g. "car")
      */
     public void addProduct(String product) throws Exception {
-        this.file.seek(this.file.length());
-        this.file.writeBytes(product+'\n'); 
+        FileChannel chan = this.file.getChannel();
+        try (FileLock lock = chan.lock()) {
+            this.file.seek(this.file.length());
+            this.file.writeBytes(product + '\n');
+        }
     }
 
     /**
@@ -40,7 +45,7 @@ public class Pocket {
         StringBuilder sb = new StringBuilder();
         this.file.seek(0);
         String line;
-        while((line = this.file.readLine()) != null) {
+        while ((line = this.file.readLine()) != null) {
             sb.append(line);
             sb.append('\n');
         }
